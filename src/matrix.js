@@ -1,3 +1,38 @@
+const matrixStack = function () {
+  const stack = [];
+
+  const result = {};
+  result.restore = function () {
+    stack.pop();
+    if (stack.length < 1) {
+      stack[0] = m4.identity();
+    }
+  };
+  result.save = function () {
+    stack.push(result.getCurrentMatrix());
+  };
+  result.getCurrentMatrix = function () {
+    return stack[stack.length - 1].slice();
+  };
+  result.setCurrentMatrix = function (matrix) {
+    return stack[stack.length - 1] = matrix;
+  };
+  result.translate = function (x, y, z) {
+    z = z !== undefined ? z : 0;
+    const matrix = result.getCurrentMatrix();
+    result.setCurrentMatrix(m4.translate(matrix, x, y, z));
+  };
+  result.rotateZ = function (radians) {
+    const matrix = result.getCurrentMatrix();
+    result.setCurrentMatrix(m4.zRotate(matrix, radians));
+  };
+  result.scale = function (x, y, z) {
+    z = z !== undefined ? z : 1;
+    const matrix = result.getCurrentMatrix();
+    result.setCurrentMatrix(m4.scale(matrix, x, y, z));
+  }
+};
+
 const m3 = {
   identity: function() {
     return [
@@ -88,6 +123,15 @@ const m3 = {
 };
 
 const m4 = {
+  identity: function() {
+    return [
+      1, 0, 0, 0,
+      0, 1, 0, 0,
+      0, 0, 1, 0,
+      0, 0, 0, 1,
+    ];
+  },
+
   translate: function(m, x, y, z) {
     return m4.multiply(m, m4.translation(x, y, z));
   },

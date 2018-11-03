@@ -39,4 +39,8 @@ function createProgram(gl, vertexShader, fragmentShader) {
   return program;
 };
 
-export { compileShader, createProgram }
+function pixelToTextureCoordinate ([x, y], width, height) {
+  return [x / (width - 1), y / (height - 1)];
+}
+
+export { compileShader, createProgram, pixelToTextureCoordinate }

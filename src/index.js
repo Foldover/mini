@@ -1,26 +1,57 @@
 import {Renderer} from "./renderer.js";
-import {Images} from "./images.js";
-import {GameScheduler, timer} from "./gameScheduler.js";
-import {Interval} from "./donkey.js";
-
-export {Renderer, Images, GameScheduler}
+import {interval, take, filter, when} from "./donkey.js";
+import {mousePosition, keyPress, keysDown, KEY} from "./inputs.js";
 
 const renderer = new Renderer();
-const images = new Images(renderer.gl);
 
-let time = 0;
+const player = function(){
+  const result = {
+    position: {
+      x: 0,
+      y: 0,
+    },
+    img: undefined
+  };
+  return result;
+};
 
-Promise.all([
-  images.loadImage('snarl', 'assets/monks.png'),
-  images.loadImage('swords', 'assets/greatswords.png')
-]).then(rs => {
-  renderer.renderLoop(1000/60).listen((delta) => {
-    time += delta / 1000;
-    renderer.background(1, 0, 0, 1);
-    renderer.drawImage(images.images.get('snarl'), 200 + (Math.sin(time) * 100), 200 + (Math.cos(time) * 150));
+const player1 = player();
+const player2 = player();
+
+const startGame = () => {
+
+  Promise.all([
+    renderer.loadImage('snarl', 'assets/monks.png').then(img => player1.img = img),
+    renderer.loadSpriteSheet('coin', 'assets/coin_animation.png', 44, 40).then(img => player2.img = img)
+  ]).then(success => {
+
+    interval(1000/60).listen(delta => {
+      renderer.background(1, 0, 0, 1);
+      renderer.drawImage(player1.img, player1.position.x, player1.position.y);
+      renderer.drawImage(player2.img, player2.position.x, player2.position.y);
+    });
+
+    interval(1000/60).listen(delta => {
+      player1.position.x += (delta / 50);
+      player1.position.y += Math.sin(player1.position.x);
+    });
+
+    const keys = keysDown();
+
+    when(keys, (value) => value[KEY.UP])
+      .listen(value => player2.position.y -= 5);
+
+    when(keys, (value) => value[KEY.DOWN])
+      .listen(value => player2.position.y += 5);
+
+    when(keys, (value) => value[KEY.LEFT])
+      .listen(value => player2.position.x -= 5);
+
+    when(keys, (value) => value[KEY.RIGHT])
+      .listen(value => player2.position.x += 5);
+
+    interval(50).listen(delta => player2.img.next());
   });
-}).then(rs => {
-  Interval(1000/60).listen(delta => {
-    renderer.drawImage(images.images.get('swords'), 50 + (Math.sin(time) * 100), 50);
-  })
-})
+};
+
+setTimeout(startGame, 1000);
